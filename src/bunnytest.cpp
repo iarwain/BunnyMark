@@ -4,10 +4,12 @@
 
 //! Variables
 
-static const orxS32 s32MaxBunnyCount                    = 500000;
-
-static orxVECTOR    avBunnyPosList[s32MaxBunnyCount]    = {};
-static orxVECTOR    avBunnySpeedList[s32MaxBunnyCount]  = {};
+static const orxS32     s32MaxBunnyCount                    = 500000;
+static volatile orxS32  s32ActiveBunnyCount                 = 0;
+static orxVECTOR        avBunnyPosList[s32MaxBunnyCount]    = {};
+static orxVECTOR        avBunnySpeedList[s32MaxBunnyCount]  = {};
+static volatile orxU32  renderIteration                     = 0;
+static volatile orxU32  updateIteration                     = 0;
 
 
 //! Code
@@ -23,6 +25,50 @@ orxSTATUS orxFASTCALL Bootstrap()
 
   // Loads config file
   orxConfig_Load("bunny.ini");
+
+  // Done!
+  return eResult;
+}
+
+orxSTATUS orxFASTCALL Update(void *_pContext)
+{
+  orxSTATUS eResult = orxSTATUS_SUCCESS;
+
+  // Should update?
+  if(updateIteration != renderIteration)
+  {
+    // For all active bunnies
+    for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
+    {
+      // Moves it
+      orxVector_Add(&avBunnyPosList[i], &avBunnyPosList[i], &avBunnySpeedList[i]);
+
+      // Constrains it
+      if(avBunnyPosList[i].fX < orxFLOAT_0)
+      {
+          avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
+          avBunnyPosList[i].fX    = orxFLOAT_0;
+      }
+      else if(avBunnyPosList[i].fX > orx2F(800.0f))
+      {
+          avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
+          avBunnyPosList[i].fX    = orx2F(800.0f);
+      }
+      if(avBunnyPosList[i].fY < orxFLOAT_0)
+      {
+          avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
+          avBunnyPosList[i].fY    = orxFLOAT_0;
+      }
+      else if (avBunnyPosList[i].fY > orx2F(600.0f))
+      {
+          avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
+          avBunnyPosList[i].fY    = orx2F(600.0f);
+      }
+    }
+
+    // Updates iteration counter
+    updateIteration = renderIteration;
+  }
 
   // Done!
   return eResult;
@@ -64,31 +110,6 @@ orxSTATUS orxFASTCALL EventHandler(const orxEVENT *_pstEvent)
       // For all active bunnies
       for(orxS32 i = 0, iCount = orxConfig_GetS32("Count"); i < iCount; i++)
       {
-        // Moves it
-        orxVector_Add(&avBunnyPosList[i], &avBunnyPosList[i], &avBunnySpeedList[i]);
-
-        // Constrains it
-        if(avBunnyPosList[i].fX < orxFLOAT_0)
-        {
-            avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
-            avBunnyPosList[i].fX    = orxFLOAT_0;
-        }
-        else if(avBunnyPosList[i].fX > orx2F(800.0f))
-        {
-            avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
-            avBunnyPosList[i].fX    = orx2F(800.0f);
-        }
-        if(avBunnyPosList[i].fY < orxFLOAT_0)
-        {
-            avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
-            avBunnyPosList[i].fY    = orxFLOAT_0;
-        }
-        else if (avBunnyPosList[i].fY > orx2F(600.0f))
-        {
-            avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
-            avBunnyPosList[i].fY    = orx2F(600.0f);
-        }
-
         // Updates transform
         stTransform.fDstX   = avBunnyPosList[i].fX;
         stTransform.fDstY   = avBunnyPosList[i].fY;
@@ -96,6 +117,9 @@ orxSTATUS orxFASTCALL EventHandler(const orxEVENT *_pstEvent)
         // Renders it
         orxDisplay_TransformBitmap(pstBitmap, &stTransform, orxDISPLAY_SMOOTHING_OFF, orxDISPLAY_BLEND_MODE_ALPHA);
       }
+
+      // Updates iteration counter
+      renderIteration++;
 
       // Don't render it
       eResult = orxSTATUS_FAILURE;
@@ -129,6 +153,9 @@ orxSTATUS orxFASTCALL Init()
     orxConfig_GetVector("Speed", &avBunnySpeedList[i]);
   }
 
+  // Starts update thread
+  orxThread_Start(Update, "UpdateBunny", orxNULL);
+
   // Done!
   return eResult;
 }
@@ -154,6 +181,7 @@ orxSTATUS orxFASTCALL Run()
   s32Count = orxConfig_GetS32("Count") + s32Delta;
   s32Count = orxCLAMP(s32Count, 0, s32MaxBunnyCount);
   orxConfig_SetS32("Count", s32Count);
+  s32ActiveBunnyCount = s32Count;
 
   // Screenshot?
   if(orxInput_IsActive("Screenshot") && orxInput_HasNewStatus("Screenshot"))
