@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}</ProjectGuid>
+    <ProjectGuid>{4FA18A82-19CB-1B42-8012-1F88E0E3191A}</ProjectGuid>
     <RootNamespace>BunnyTest</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -310,7 +310,7 @@
     <ClInclude Include="..\..\..\include\orx\utils\orxTree.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\bunnytest.c">
+    <ClCompile Include="..\..\..\src\bunnytest.cpp">
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

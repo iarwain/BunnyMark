@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 }
 
 
-#ifdef __orxWINDOWS__
+#ifdef __orxMSVC__
 
 #include "windows.h"
 
@@ -206,4 +206,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   return EXIT_SUCCESS;
 }
 
-#endif // __orxWINDOWS__
+#endif // __orxMSVC__

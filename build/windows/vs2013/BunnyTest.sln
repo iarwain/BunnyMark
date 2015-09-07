@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BunnyTest", "BunnyTest.vcxproj", "{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BunnyTest", "BunnyTest.vcxproj", "{4FA18A82-19CB-1B42-8012-1F88E0E3191A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,14 +11,14 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Debug|x64.ActiveCfg = Debug|x64
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Debug|x64.Build.0 = Debug|x64
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Debug|Win32.Build.0 = Debug|Win32
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Release|x64.ActiveCfg = Release|x64
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Release|x64.Build.0 = Release|x64
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Release|Win32.ActiveCfg = Release|Win32
-		{AB4FF535-DBBA-4C44-8D1F-05C878CF2E08}.Release|Win32.Build.0 = Release|Win32
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Debug|x64.ActiveCfg = Debug|x64
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Debug|x64.Build.0 = Debug|x64
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Debug|Win32.Build.0 = Debug|Win32
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Release|x64.ActiveCfg = Release|x64
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Release|x64.Build.0 = Release|x64
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Release|Win32.ActiveCfg = Release|Win32
+		{4FA18A82-19CB-1B42-8012-1F88E0E3191A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

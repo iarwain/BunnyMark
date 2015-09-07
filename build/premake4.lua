@@ -232,3 +232,7 @@ project "BunnyTest"
     configuration {"windows", "not x64"}
         libdirs {"../lib/windows/32"}
         targetdir ("../bin/windows/32")
+
+    configuration {"windows", "codeblocks or codelite or gmake"}
+        libdirs {"../lib/mingw"}
+        targetdir ("../bin/mingw")
