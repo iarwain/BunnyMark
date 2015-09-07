@@ -40,6 +40,9 @@ orxSTATUS orxFASTCALL Update(void *_pContext)
     // For all active bunnies
     for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
     {
+      // Updates its speed
+      avBunnySpeedList[i].fY += orx2F(0.5f);
+
       // Moves it
       orxVector_Add(&avBunnyPosList[i], &avBunnyPosList[i], &avBunnySpeedList[i]);
 
