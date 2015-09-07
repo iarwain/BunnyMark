@@ -115,6 +115,9 @@ orxSTATUS orxFASTCALL EventHandler(const orxEVENT *_pstEvent)
       // Runs update task
       orxThread_RunTask(Update, orxNULL, orxNULL, orxNULL);
 
+      // Stores FPS
+      orxConfig_SetS32("FPS", orxFPS_GetFPS());
+
       // Don't render it
       eResult = orxSTATUS_FAILURE;
     }
