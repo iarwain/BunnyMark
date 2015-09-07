@@ -8,8 +8,6 @@ static const orxS32     s32MaxBunnyCount                    = 500000;
 static volatile orxS32  s32ActiveBunnyCount                 = 0;
 static orxVECTOR        avBunnyPosList[s32MaxBunnyCount]    = {};
 static orxVECTOR        avBunnySpeedList[s32MaxBunnyCount]  = {};
-static volatile orxU32  renderIteration                     = 0;
-static volatile orxU32  updateIteration                     = 0;
 
 
 //! Code
@@ -34,43 +32,36 @@ orxSTATUS orxFASTCALL Update(void *_pContext)
 {
   orxSTATUS eResult = orxSTATUS_SUCCESS;
 
-  // Should update?
-  if(updateIteration != renderIteration)
+  // For all active bunnies
+  for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
   {
-    // For all active bunnies
-    for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
+    // Updates its speed
+    avBunnySpeedList[i].fY += orx2F(0.5f);
+
+    // Moves it
+    orxVector_Add(&avBunnyPosList[i], &avBunnyPosList[i], &avBunnySpeedList[i]);
+
+    // Constrains it
+    if(avBunnyPosList[i].fX < orxFLOAT_0)
     {
-      // Updates its speed
-      avBunnySpeedList[i].fY += orx2F(0.5f);
-
-      // Moves it
-      orxVector_Add(&avBunnyPosList[i], &avBunnyPosList[i], &avBunnySpeedList[i]);
-
-      // Constrains it
-      if(avBunnyPosList[i].fX < orxFLOAT_0)
-      {
-          avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
-          avBunnyPosList[i].fX    = orxFLOAT_0;
-      }
-      else if(avBunnyPosList[i].fX > orx2F(800.0f))
-      {
-          avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
-          avBunnyPosList[i].fX    = orx2F(800.0f);
-      }
-      if(avBunnyPosList[i].fY < orxFLOAT_0)
-      {
-          avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
-          avBunnyPosList[i].fY    = orxFLOAT_0;
-      }
-      else if (avBunnyPosList[i].fY > orx2F(600.0f))
-      {
-          avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
-          avBunnyPosList[i].fY    = orx2F(600.0f);
-      }
+        avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
+        avBunnyPosList[i].fX    = orxFLOAT_0;
     }
-
-    // Updates iteration counter
-    updateIteration = renderIteration;
+    else if(avBunnyPosList[i].fX > orx2F(800.0f))
+    {
+        avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
+        avBunnyPosList[i].fX    = orx2F(800.0f);
+    }
+    if(avBunnyPosList[i].fY < orxFLOAT_0)
+    {
+        avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
+        avBunnyPosList[i].fY    = orxFLOAT_0;
+    }
+    else if (avBunnyPosList[i].fY > orx2F(600.0f))
+    {
+        avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
+        avBunnyPosList[i].fY    = orx2F(600.0f);
+    }
   }
 
   // Done!
@@ -121,8 +112,8 @@ orxSTATUS orxFASTCALL EventHandler(const orxEVENT *_pstEvent)
         orxDisplay_TransformBitmap(pstBitmap, &stTransform, orxDISPLAY_SMOOTHING_OFF, orxDISPLAY_BLEND_MODE_ALPHA);
       }
 
-      // Updates iteration counter
-      renderIteration++;
+      // Runs update task
+      orxThread_RunTask(Update, orxNULL, orxNULL, orxNULL);
 
       // Don't render it
       eResult = orxSTATUS_FAILURE;
@@ -155,9 +146,6 @@ orxSTATUS orxFASTCALL Init()
     orxConfig_GetVector("Pos", &avBunnyPosList[i]);
     orxConfig_GetVector("Speed", &avBunnySpeedList[i]);
   }
-
-  // Starts update thread
-  orxThread_Start(Update, "UpdateBunny", orxNULL);
 
   // Done!
   return eResult;
