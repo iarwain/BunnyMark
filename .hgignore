@@ -1,0 +1,5 @@
+syntax: glob
+*.pdb
+*.opensdf
+*.sdf
+build/windows/vs2013/obj
