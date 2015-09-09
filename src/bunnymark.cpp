@@ -6,6 +6,7 @@
 
 static const orxS32     s32MaxBunnyCount                    = 500000;
 static volatile orxS32  s32ActiveBunnyCount                 = 0;
+static orxFLOAT         fGravity                            = orxFLOAT_0;
 static orxVECTOR        avBunnyPosList[s32MaxBunnyCount]    = {};
 static orxVECTOR        avBunnySpeedList[s32MaxBunnyCount]  = {};
 
@@ -25,11 +26,7 @@ orxSTATUS orxFASTCALL Bootstrap()
 
 orxSTATUS orxFASTCALL Update(void *_pContext)
 {
-  orxFLOAT  fGravity;
   orxSTATUS eResult = orxSTATUS_SUCCESS;
-
-  // Gets gravity
-  fGravity = orxConfig_GetFloat("Gravity");
 
   // For all active bunnies
   for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
@@ -143,11 +140,14 @@ orxSTATUS orxFASTCALL Init()
   // Adds render event handler
   orxEvent_AddHandler(orxEVENT_TYPE_RENDER, EventHandler);
 
+  // Gets gravity
+  fGravity = orxConfig_GetFloat("Gravity");
+
   // Inits all bunnies
   for(orxS32 i = 0; i < s32MaxBunnyCount; i++)
   {
-    orxConfig_GetVector("Pos", &avBunnyPosList[i]);
-    orxConfig_GetVector("Speed", &avBunnySpeedList[i]);
+    orxConfig_GetVector("InitPos", &avBunnyPosList[i]);
+    orxConfig_GetVector("InitSpeed", &avBunnySpeedList[i]);
   }
 
   // Done!
