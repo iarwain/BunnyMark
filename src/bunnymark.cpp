@@ -1,5 +1,5 @@
 //! Includes
-#include "bunnytest.h"
+#include "bunnymark.h"
 
 
 //! Variables
@@ -12,17 +12,12 @@ static orxVECTOR        avBunnySpeedList[s32MaxBunnyCount]  = {};
 
 //! Code
 
-
 orxSTATUS orxFASTCALL Bootstrap()
 {
   orxSTATUS eResult = orxSTATUS_SUCCESS;
 
-  // Adds default release config paths
+  // Adds default config paths
   orxResource_AddStorage(orxCONFIG_KZ_RESOURCE_GROUP, "../../../data", orxFALSE);
-  orxResource_AddStorage(orxCONFIG_KZ_RESOURCE_GROUP, "../../data", orxFALSE);
-
-  // Loads config file
-  orxConfig_Load("bunny.ini");
 
   // Done!
   return eResult;
@@ -30,7 +25,11 @@ orxSTATUS orxFASTCALL Bootstrap()
 
 orxSTATUS orxFASTCALL Update(void *_pContext)
 {
+  orxFLOAT  fGravity;
   orxSTATUS eResult = orxSTATUS_SUCCESS;
+
+  // Gets gravity
+  fGravity = orxConfig_GetFloat("Gravity");
 
   // For all active bunnies
   for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
@@ -39,7 +38,8 @@ orxSTATUS orxFASTCALL Update(void *_pContext)
     avBunnySpeedList[i].fY += orx2F(0.5f);
 
     // Moves it
-    orxVector_Add(&avBunnyPosList[i], &avBunnyPosList[i], &avBunnySpeedList[i]);
+    avBunnyPosList[i].fX += avBunnySpeedList[i].fX;
+    avBunnyPosList[i].fY += avBunnySpeedList[i].fY;
 
     // Constrains it
     if(avBunnyPosList[i].fX < orxFLOAT_0)

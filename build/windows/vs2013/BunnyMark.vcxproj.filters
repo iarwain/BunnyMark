@@ -2,65 +2,65 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
-      <UniqueIdentifier>{8A054259-EBCF-B241-95A3-D545D5A118C9}</UniqueIdentifier>
+      <UniqueIdentifier>{520659B9-682A-884A-BB8D-FBE8404D5D71}</UniqueIdentifier>
     </Filter>
     <Filter Include="include">
-      <UniqueIdentifier>{4A3B2A15-A0BB-4144-BA12-72E9117488A9}</UniqueIdentifier>
+      <UniqueIdentifier>{B38E7690-36FD-9346-A779-F70D9B391775}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx">
-      <UniqueIdentifier>{D5A36AE8-37DA-964C-8CE3-0D4271F8B088}</UniqueIdentifier>
+      <UniqueIdentifier>{1D94C7C2-2B90-7A4F-BDE8-81B4E8026552}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\anim">
-      <UniqueIdentifier>{8BD5270B-8FE7-6243-8289-084D0656EE14}</UniqueIdentifier>
+      <UniqueIdentifier>{256A284A-E919-CA43-B05F-34F8FAE3A2D8}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\base">
-      <UniqueIdentifier>{C32B3100-CB0F-5A47-A063-7B3774FDDDDC}</UniqueIdentifier>
+      <UniqueIdentifier>{084EE4F2-91B0-EF41-8289-B18AC99A6ECC}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\core">
-      <UniqueIdentifier>{EC1772C9-0858-2C4B-A2A0-D6974C15E4DC}</UniqueIdentifier>
+      <UniqueIdentifier>{425160E0-D458-2C43-A8DD-FFC4B3A52005}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\debug">
-      <UniqueIdentifier>{BD5DC795-C550-2349-AA1F-6FE761BE992E}</UniqueIdentifier>
+      <UniqueIdentifier>{956934FA-F01A-9845-A102-B86D8B116CBF}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\display">
-      <UniqueIdentifier>{31D86993-7658-BC48-B083-DEB99B60C2EB}</UniqueIdentifier>
+      <UniqueIdentifier>{E843D428-1780-244B-A904-78160099A98C}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\io">
-      <UniqueIdentifier>{98C02E5C-9F81-CC4A-B481-ABDE59F2FB03}</UniqueIdentifier>
+      <UniqueIdentifier>{5C27002C-9107-1046-89D2-604C3CCB5CEC}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\main">
-      <UniqueIdentifier>{F977F992-266C-E64D-9108-A22F4DE64B32}</UniqueIdentifier>
+      <UniqueIdentifier>{03EDC0EA-859A-D64B-AE29-B3758373A536}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\math">
-      <UniqueIdentifier>{71913327-6AC3-ED47-971B-67908D62EA68}</UniqueIdentifier>
+      <UniqueIdentifier>{491A7AF0-A8DA-3443-9077-D6012BFAE84C}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\memory">
-      <UniqueIdentifier>{AD2FD804-686F-7740-9F4A-AB44AAA44703}</UniqueIdentifier>
+      <UniqueIdentifier>{C680E727-0BAE-8E4A-8F5A-1AFDC5119A88}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\object">
-      <UniqueIdentifier>{E5F8591C-6369-1F47-BCDC-AFC99004BAFA}</UniqueIdentifier>
+      <UniqueIdentifier>{330ABFB4-0317-1F41-A010-475A3D26B9F3}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\physics">
-      <UniqueIdentifier>{012D19F2-CADF-BF48-A546-B8D9BAE650EB}</UniqueIdentifier>
+      <UniqueIdentifier>{FA6D491F-D05B-1949-B00C-0B059CFD951C}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\plugin">
-      <UniqueIdentifier>{3557C64E-967A-2841-948D-76EE16FF9DB1}</UniqueIdentifier>
+      <UniqueIdentifier>{1AD96155-478B-7143-9FBF-7E79DDBEA2F4}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\plugin\define">
-      <UniqueIdentifier>{33C0697E-1C1C-4344-8DF8-99190D67C377}</UniqueIdentifier>
+      <UniqueIdentifier>{77BE61A6-B9B7-AD48-A39D-CECA9C168235}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\render">
-      <UniqueIdentifier>{7E4FE17D-38C3-FB4F-A67F-8CE488075B31}</UniqueIdentifier>
+      <UniqueIdentifier>{78AD5D1B-87C2-144A-B7B4-8A2A3A701B0C}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\sound">
-      <UniqueIdentifier>{4870B3F0-8E43-924C-A28C-7B8432C52F59}</UniqueIdentifier>
+      <UniqueIdentifier>{B4F1040C-3C45-894C-9E03-E483E6A73A7A}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\orx\utils">
-      <UniqueIdentifier>{4C35E682-84BA-B84E-A1E0-CA42CBA1413F}</UniqueIdentifier>
+      <UniqueIdentifier>{2AC2A1E9-DF90-154E-A1CB-EA5F0103E11D}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\include\bunnytest.h">
+    <ClInclude Include="..\..\..\include\bunnymark.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\orx\orx.h">
@@ -293,7 +293,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\bunnytest.cpp">
+    <ClCompile Include="..\..\..\src\bunnymark.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

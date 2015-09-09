@@ -76,10 +76,10 @@ copybase = path.rebase ("..", os.getcwd (), os.getcwd () .. "/" .. destination)
 
 
 --
--- Solution: BunnyTest
+-- Solution: BunnyMark
 --
 
-solution "BunnyTest"
+solution "BunnyMark"
 
     language ("C++")
 
@@ -123,13 +123,6 @@ solution "BunnyTest"
     configuration {"*Debug*"}
         defines {"__orxDEBUG__"}
         links {"orxd"}
-        targetsuffix ("d")
-
-    configuration {"*Profile*"}
-        defines {"__orxPROFILER__"}
-        flags {"Optimize", "NoRTTI"}
-        links {"orxp"}
-        targetsuffix ("p")
 
     configuration {"*Release*"}
         flags {"Optimize", "NoRTTI"}
@@ -171,10 +164,10 @@ solution "BunnyTest"
 
 
 --
--- Project: BunnyTest
+-- Project: BunnyMark
 --
 
-project "BunnyTest"
+project "BunnyMark"
 
     files
     {
@@ -213,8 +206,8 @@ project "BunnyTest"
             "Foundation.framework",
             "AppKit.framework"
         }
-        libdirs {"../lib/mac"}
-        targetdir ("../bin/mac")
+        libdirs {"../lib/mac/universal"}
+        targetdir ("../bin/mac/universal")
 
 
 -- Windows
@@ -234,5 +227,5 @@ project "BunnyTest"
         targetdir ("../bin/windows/32")
 
     configuration {"windows", "codeblocks or codelite or gmake"}
-        libdirs {"../lib/mingw"}
-        targetdir ("../bin/mingw")
+        libdirs {"../lib/windows/mingw"}
+        targetdir ("../bin/windows/mingw")
