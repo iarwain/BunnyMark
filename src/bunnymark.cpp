@@ -15,10 +15,13 @@ static orxVECTOR        avBunnySpeedList[s32MaxBunnyCount]  = {};
 
 orxSTATUS orxFASTCALL Bootstrap()
 {
-  orxSTATUS eResult = orxSTATUS_SUCCESS;
+  orxSTATUS eResult = orxSTATUS_FAILURE;
 
   // Adds default config paths
   orxResource_AddStorage(orxCONFIG_KZ_RESOURCE_GROUP, "../../../data", orxFALSE);
+
+  // Loads main config file
+  orxConfig_Load("Bunny.ini");
 
   // Done!
   return eResult;
