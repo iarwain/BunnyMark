@@ -1,6 +1,6 @@
--- This premake script should be used with the orx-customized version of premake4.
--- Its Mercurial repository can be found at https://bitbucket.org/orx/premake-stable.
--- A copy, including binaries, can also be found in the extern/premake folder of any orx distributions.
+-- This premake script should be used with orx-customized version of premake4.
+-- Its Hg repository can be found at https://bitbucket.org/orx/premake-stable.
+-- A copy, including binaries, can also be found in the extern/premake folder.
 
 --
 -- Globals
@@ -10,13 +10,15 @@ function initconfigurations ()
     return
     {
         "Debug",
+        "Profile",
         "Release"
     }
 end
 
 function initplatforms ()
-    if os.is ("windows") then
-        if string.lower(_ACTION) == "vs2013" then
+    if os.is ("windows")
+    or os.is ("linux") then
+        if os.is64bit () then
             return
             {
                 "x64",
@@ -25,31 +27,13 @@ function initplatforms ()
         else
             return
             {
-                "Native"
+                "x32",
+                "x64"
             }
         end
     elseif os.is ("macosx") then
-        if string.find(string.lower(_ACTION), "xcode") then
-            return
-            {
-                "Universal"
-            }
-        else
-            return
-            {
-                "x32", "x64"
-            }
-        end
-    elseif os.is64bit () then
         return
         {
-            "x64",
-            "x32"
-        }
-    else
-        return
-        {
-            "x32",
             "x64"
         }
     end
@@ -61,9 +45,16 @@ function defaultaction (name, action)
    end
 end
 
-defaultaction ("windows", "vs2013")
+defaultaction ("windows", "vs2019")
 defaultaction ("linux", "gmake")
-defaultaction ("macosx", "xcode4")
+defaultaction ("macosx", "gmake")
+
+newoption
+{
+    trigger = "to",
+    value   = "path",
+    description = "Set the output location for the generated files"
+}
 
 if os.is ("macosx") then
     osname = "mac"
@@ -71,15 +62,15 @@ else
     osname = os.get()
 end
 
-destination = "./" .. osname .. "/" .. _ACTION
+destination = _OPTIONS["to"] or "./" .. osname .. "/" .. _ACTION
 copybase = path.rebase ("..", os.getcwd (), os.getcwd () .. "/" .. destination)
 
 
 --
--- Solution: BunnyMark
+-- Solution: bunnymark
 --
 
-solution "BunnyMark"
+solution "bunnymark"
 
     language ("C++")
 
@@ -97,11 +88,7 @@ solution "BunnyMark"
         initplatforms ()
     }
 
-    includedirs
-    {
-        "../include",
-        "../include/orx"
-    }
+    targetdir ("../bin")
 
     flags
     {
@@ -110,26 +97,60 @@ solution "BunnyMark"
         "FloatFast",
         "NoNativeWChar",
         "NoExceptions",
+        "NoIncrementalLink",
+        "NoEditAndContinue",
+        "NoMinimalRebuild",
         "Symbols",
         "StaticRuntime"
     }
 
-    configuration {"not vs2013"}
+    configuration {"not xcode*"}
+        includedirs {"$(ORX)/include"}
+        libdirs {"$(ORX)/lib/dynamic"}
+
+    configuration {"xcode*"}
+        includedirs {"../include"}
+        libdirs {"../lib/dynamic"}
+
+    configuration {"not vs2015", "not vs2017", "not vs2019"}
+        flags {"EnableSSE2"}
+
+    configuration {"not x64"}
         flags {"EnableSSE2"}
 
     configuration {"not windows"}
         flags {"Unicode"}
 
     configuration {"*Debug*"}
+        targetsuffix ("d")
         defines {"__orxDEBUG__"}
         links {"orxd"}
+
+    configuration {"*Profile*"}
+        targetsuffix ("p")
+        defines {"__orxPROFILER__"}
+        flags {"Optimize", "NoRTTI"}
+        links {"orxp"}
 
     configuration {"*Release*"}
         flags {"Optimize", "NoRTTI"}
         links {"orx"}
 
+    configuration {"windows", "*Release*"}
+        kind ("WindowedApp")
+
 
 -- Linux
+
+    configuration {"linux"}
+        buildoptions {"-Wno-unused-function"}
+        linkoptions {"-Wl,-rpath ./", "-Wl,--export-dynamic"}
+        links
+        {
+            "dl",
+            "m",
+            "rt"
+        }
 
     -- This prevents an optimization bug from happening with some versions of gcc on linux
     configuration {"linux", "not *Debug*"}
@@ -141,16 +162,29 @@ solution "BunnyMark"
     configuration {"macosx"}
         buildoptions
         {
-            "-mmacosx-version-min=10.6",
+            "-stdlib=libc++",
             "-gdwarf-2",
-            "-Wno-write-strings",
-            "-Wno-invalid-offsetof",
-            "-Wno-switch"
+            "-Wno-unused-function",
+            "-Wno-write-strings"
         }
         linkoptions
         {
-            "-mmacosx-version-min=10.6",
+            "-stdlib=libc++",
             "-dead_strip"
+        }
+
+    configuration {"macosx", "not codelite", "not codeblocks"}
+        links
+        {
+            "Foundation.framework",
+            "AppKit.framework"
+        }
+
+    configuration {"macosx", "codelite or codeblocks"}
+        linkoptions
+        {
+            "-framework Foundation",
+            "-framework AppKit"
         }
 
     configuration {"macosx", "x32"}
@@ -162,70 +196,90 @@ solution "BunnyMark"
 
 -- Windows
 
+    configuration {"windows", "vs*"}
+        buildoptions
+        {
+            "/MP",
+            "/EHsc"
+        }
+
+    configuration {"windows", "gmake", "x32"}
+        prebuildcommands
+        {
+            "$(eval CC := i686-w64-mingw32-gcc)",
+            "$(eval CXX := i686-w64-mingw32-g++)",
+            "$(eval AR := i686-w64-mingw32-gcc-ar)"
+        }
+
+    configuration {"windows", "gmake", "x64"}
+        prebuildcommands
+        {
+            "$(eval CC := x86_64-w64-mingw32-gcc)",
+            "$(eval CXX := x86_64-w64-mingw32-g++)",
+            "$(eval AR := x86_64-w64-mingw32-gcc-ar)"
+        }
+
+    configuration {"windows", "codelite or codeblocks", "x32"}
+        envs
+        {
+            "CC=i686-w64-mingw32-gcc",
+            "CXX=i686-w64-mingw32-g++",
+            "AR=i686-w64-mingw32-gcc-ar"
+        }
+
+    configuration {"windows", "codelite or codeblocks", "x64"}
+        envs
+        {
+            "CC=x86_64-w64-mingw32-gcc",
+            "CXX=x86_64-w64-mingw32-g++",
+            "AR=x86_64-w64-mingw32-gcc-ar"
+        }
+
 
 --
--- Project: BunnyMark
+-- Project: bunnymark
 --
 
-project "BunnyMark"
+project "bunnymark"
 
     files
     {
-        "../src/**.c",
         "../src/**.cpp",
-        "../include/**.h"
+        "../src/**.c",
+        "../include/**.h",
+        "../data/config/**.ini"
     }
-    targetname ("bunny")
+
+    includedirs
+    {
+        "../include"
+    }
+
+    configuration {"windows", "vs*"}
+        buildoptions {"/EHsc"}
+
+    vpaths
+    {
+        ["config"] = {"**.ini"}
+    }
 
 
 -- Linux
 
     configuration {"linux"}
-        linkoptions {"-Wl,-rpath ./", "-Wl,--export-dynamic"}
-        links
-        {
-            "dl",
-            "m",
-            "rt"
-        }
-
-    configuration {"linux", "x32"}
-        libdirs {"../lib/linux/32"}
-        targetdir ("../bin/linux/32")
-
-    configuration {"linux", "x64"}
-        libdirs {"../lib/linux/64"}
-        targetdir ("../bin/linux/64")
+        postbuildcommands {"cp -f $(ORX)/lib/dynamic/liborx*.so " .. copybase .. "/bin"}
 
 
 -- Mac OS X
 
-    configuration {"macosx"}
-        links
-        {
-            "Foundation.framework",
-            "AppKit.framework"
-        }
-        libdirs {"../lib/mac/universal"}
-        targetdir ("../bin/mac/universal")
+    configuration {"macosx", "xcode*"}
+        postbuildcommands {"cp -f ../lib/dynamic/liborx*.dylib " .. copybase .. "/bin"}
+
+    configuration {"macosx", "not xcode*"}
+        postbuildcommands {"cp -f $(ORX)/lib/dynamic/liborx*.dylib " .. copybase .. "/bin"}
 
 
 -- Windows
 
     configuration {"windows"}
-        links
-        {
-            "winmm"
-        }
-
-    configuration {"windows", "x64"}
-        libdirs {"../lib/windows/64"}
-        targetdir ("../bin/windows/64")
-
-    configuration {"windows", "not x64"}
-        libdirs {"../lib/windows/32"}
-        targetdir ("../bin/windows/32")
-
-    configuration {"windows", "codeblocks or codelite or gmake"}
-        libdirs {"../lib/windows/mingw"}
-        targetdir ("../bin/windows/mingw")
+        postbuildcommands {"cmd /c copy /Y $(ORX)\\lib\\dynamic\\orx*.dll " .. path.translate(copybase, "\\") .. "\\bin"}

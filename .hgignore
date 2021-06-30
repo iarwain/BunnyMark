@@ -1,9 +1,3 @@
 syntax: glob
-*.pdb
-*.opensdf
-*.sdf
-build/windows/vs2013/obj
-*.log
-*.idb
-*.ilk
-*.suo
+bin/
+build/

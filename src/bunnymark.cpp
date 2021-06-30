@@ -1,68 +1,63 @@
-//! Includes
-#include "bunnymark.h"
+/**
+ * @file bunnymark.cpp
+ * @date 30-Jun-2021
+ */
 
+#include "orx.h"
 
-//! Variables
+#ifdef __orxMSVC__
 
-static const orxS32     s32MaxBunnyCount                    = 500000;
+/* Requesting high performance dedicated GPU on hybrid laptops */
+__declspec(dllexport) unsigned long NvOptimusEnablement         = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance  = 1;
+
+#endif // __orxMSVC__
+
+static orxOBJECT       *pstCurrentBunny                     = orxNULL;
+static const orxS32     s32MaxBunnyCount                    = 1000000;
 static volatile orxS32  s32ActiveBunnyCount                 = 0;
 static orxFLOAT         fGravity                            = orxFLOAT_0;
-static orxVECTOR        avBunnyPosList[s32MaxBunnyCount]    = {};
-static orxVECTOR        avBunnySpeedList[s32MaxBunnyCount]  = {};
+static orxVECTOR        vScreenSize                         = {};
+static orxVECTOR        avBunnyPositions[s32MaxBunnyCount]  = {};
+static orxVECTOR        avBunnySpeeds[s32MaxBunnyCount]     = {};
 
-
-//! Code
-
-orxSTATUS orxFASTCALL Bootstrap()
+orxSTATUS orxFASTCALL UpdateBunnies(void *_pContext)
 {
-  orxSTATUS eResult = orxSTATUS_FAILURE;
+    orxCLOCK_INFO  *pstClockInfo  = (orxCLOCK_INFO *)_pContext;
+    orxSTATUS       eResult       = orxSTATUS_SUCCESS;
 
-  // Adds default config paths
-  orxResource_AddStorage(orxCONFIG_KZ_RESOURCE_GROUP, "../../../data", orxFALSE);
-
-  // Loads main config file
-  orxConfig_Load("Bunny.ini");
-
-  // Done!
-  return eResult;
-}
-
-orxSTATUS orxFASTCALL Update(void *_pContext)
-{
-  orxSTATUS eResult = orxSTATUS_SUCCESS;
-
-  // For all active bunnies
-  for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
-  {
-    // Updates its speed
-    avBunnySpeedList[i].fY += orx2F(0.5f);
-
-    // Moves it
-    avBunnyPosList[i].fX += avBunnySpeedList[i].fX;
-    avBunnyPosList[i].fY += avBunnySpeedList[i].fY;
-
-    // Constrains it
-    if(avBunnyPosList[i].fX < orxFLOAT_0)
+    // For all active bunnies
+    for(orxS32 i = 0, iCount = s32ActiveBunnyCount; i < iCount; i++)
     {
-        avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
-        avBunnyPosList[i].fX    = orxFLOAT_0;
+        // Updates its speed
+        avBunnySpeeds[i].fY += fGravity * pstClockInfo->fDT;
+
+        // Moves it
+        avBunnyPositions[i].fX += avBunnySpeeds[i].fX * pstClockInfo->fDT;
+        avBunnyPositions[i].fY += avBunnySpeeds[i].fY * pstClockInfo->fDT;
+
+        // Constrains it
+        if(avBunnyPositions[i].fX < orxFLOAT_0)
+        {
+            avBunnySpeeds[i].fX  = -avBunnySpeeds[i].fX;
+            avBunnyPositions[i].fX    = orxFLOAT_0;
+        }
+        else if(avBunnyPositions[i].fX > vScreenSize.fX)
+        {
+            avBunnySpeeds[i].fX  = -avBunnySpeeds[i].fX;
+            avBunnyPositions[i].fX    = vScreenSize.fX;
+        }
+        if(avBunnyPositions[i].fY < orxFLOAT_0)
+        {
+            avBunnySpeeds[i].fY  = -avBunnySpeeds[i].fY;
+            avBunnyPositions[i].fY    = orxFLOAT_0;
+        }
+        else if (avBunnyPositions[i].fY > vScreenSize.fY)
+        {
+            avBunnySpeeds[i].fY  = -avBunnySpeeds[i].fY;
+            avBunnyPositions[i].fY    = vScreenSize.fY;
+        }
     }
-    else if(avBunnyPosList[i].fX > orx2F(800.0f))
-    {
-        avBunnySpeedList[i].fX  = -avBunnySpeedList[i].fX;
-        avBunnyPosList[i].fX    = orx2F(800.0f);
-    }
-    if(avBunnyPosList[i].fY < orxFLOAT_0)
-    {
-        avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
-        avBunnyPosList[i].fY    = orxFLOAT_0;
-    }
-    else if (avBunnyPosList[i].fY > orx2F(600.0f))
-    {
-        avBunnySpeedList[i].fY  = -avBunnySpeedList[i].fY;
-        avBunnyPosList[i].fY    = orx2F(600.0f);
-    }
-  }
 
   // Done!
   return eResult;
@@ -70,165 +65,246 @@ orxSTATUS orxFASTCALL Update(void *_pContext)
 
 orxSTATUS orxFASTCALL EventHandler(const orxEVENT *_pstEvent)
 {
-  orxSTATUS eResult = orxSTATUS_SUCCESS;
+    static orxS32   ss32BunnyIndex = 0;
+    orxSTATUS       eResult = orxSTATUS_SUCCESS;
 
-  // Object start?
-  if(_pstEvent->eID == orxRENDER_EVENT_OBJECT_START)
-  {
-    orxOBJECT *pstObject;
-
-    // Gets sending object
-    pstObject = orxOBJECT(_pstEvent->hSender);
-
-    // Bunny?
-    if(orxString_Compare(orxObject_GetName(pstObject), "Bunny") == 0)
+    if(_pstEvent->eID == orxRENDER_EVENT_START)
     {
-      orxDISPLAY_TRANSFORM  stTransform;
-      orxBITMAP            *pstBitmap;
+        // Resets internal display index
+        ss32BunnyIndex = 0;
 
-      // Gets its current bitmap
-      pstBitmap = orxTexture_GetBitmap(orxObject_GetWorkingTexture(pstObject));
+        // Stores FPS
+        orxConfig_SetS32("FPS", orxFPS_GetFPS());
 
-      // Sets its color
-      orxDisplay_SetBitmapColor(pstBitmap, orx2RGBA(255, 255, 255, 255));
-
-      // Inits transform
-      stTransform.fRepeatX  =
-      stTransform.fRepeatY  =
-      stTransform.fScaleX   =
-      stTransform.fScaleY   = orxFLOAT_1;
-      stTransform.fSrcX     =
-      stTransform.fSrcY     =
-      stTransform.fRotation = orxFLOAT_0;
-
-      // For all active bunnies
-      for(orxS32 i = 0, iCount = orxConfig_GetS32("Count"); i < iCount; i++)
-      {
-        // Updates transform
-        stTransform.fDstX   = avBunnyPosList[i].fX;
-        stTransform.fDstY   = avBunnyPosList[i].fY;
-
-        // Renders it
-        orxDisplay_TransformBitmap(pstBitmap, &stTransform, orxDISPLAY_SMOOTHING_OFF, orxDISPLAY_BLEND_MODE_ALPHA);
-      }
-
-      // Runs update task
-      orxThread_RunTask(Update, orxNULL, orxNULL, orxNULL);
-
-      // Stores FPS
-      orxConfig_SetS32("FPS", orxFPS_GetFPS());
-
-      // Don't render it
-      eResult = orxSTATUS_FAILURE;
+        // Runs update task
+        orxThread_RunTask(UpdateBunnies, orxNULL, orxNULL, _pstEvent->pContext);
     }
-  }
+    else
+    {
+        orxOBJECT *pstObject;
 
-  // Done!
-  return eResult;
+        // Gets sending object
+        pstObject = orxOBJECT(_pstEvent->hSender);
+
+        // Bunny?
+        if(!orxString_Compare(orxObject_GetName(pstObject), "Bunny"))
+        {
+            orxDISPLAY_TRANSFORM    stTransform;
+            orxCOLOR                stColor;
+            orxVECTOR               vScale;
+            orxBITMAP              *pstBitmap;
+            orxRGBA                 stRGBA = orx2RGBA(255, 255, 255, 255);
+            orxCHAR                 acBuffer[32] = {};
+
+            // Gets its current bitmap
+            pstBitmap = orxTexture_GetBitmap(orxObject_GetWorkingTexture(pstObject));
+
+            // Gets its scale
+            orxObject_GetScale(pstObject, &vScale);
+
+            // Gets its color
+            if(orxObject_HasColor(pstObject))
+            {
+                stRGBA = orxColor_ToRGBA(orxObject_GetColor(pstObject, &stColor));
+            }
+
+            // Inits transform
+            stTransform.fRepeatX    =
+            stTransform.fRepeatY    = orxFLOAT_1;
+            stTransform.fScaleX     = vScale.fX;
+            stTransform.fScaleY     = vScale.fY;
+            stTransform.fSrcX       =
+            stTransform.fSrcY       =
+            stTransform.fRotation   = orxFLOAT_0;
+
+            // For all active bunnies
+            orxString_NPrint(acBuffer, sizeof(acBuffer), "%016llX", orxStructure_GetGUID(pstObject));
+            orxConfig_PushSection(acBuffer);
+            for(orxS32 s32Count = orxMIN(s32ActiveBunnyCount, orxConfig_GetS32("Count") + ss32BunnyIndex);
+                ss32BunnyIndex < s32Count;
+                ss32BunnyIndex++)
+            {
+                // Updates transform
+                stTransform.fDstX   = avBunnyPositions[ss32BunnyIndex].fX;
+                stTransform.fDstY   = avBunnyPositions[ss32BunnyIndex].fY;
+
+                // Renders it
+                orxDisplay_TransformBitmap(pstBitmap, &stTransform, stRGBA, orxDISPLAY_SMOOTHING_OFF, orxDISPLAY_BLEND_MODE_ALPHA);
+            }
+            orxConfig_PopSection();
+
+            // Don't render it
+            eResult = orxSTATUS_FAILURE;
+        }
+    }
+
+    // Done!
+    return eResult;
 }
 
+/** Update function, it has been registered to be called every tick of the core clock
+ */
+void orxFASTCALL Update(const orxCLOCK_INFO *_pstClockInfo, void *_pContext)
+{
+    orxS32    s32Delta  = 0;
+    orxSTATUS eResult   = orxSTATUS_SUCCESS;
+
+    // Add bunnies?
+    if(orxInput_IsActive("+Bunny"))
+    {
+        orxS32  s32Delta = orxConfig_GetS32("Delta");
+        orxCHAR acBuffer[32] = {};
+
+        // New bunny batch?
+        if(orxInput_HasNewStatus("+Bunny"))
+        {
+            orxU64 PreviousBunnyGUID = pstCurrentBunny ? orxStructure_GetGUID(pstCurrentBunny) : 0;
+
+            // Creates new random batch
+            pstCurrentBunny = orxObject_CreateFromConfig("Bunny");
+            orxString_NPrint(acBuffer, sizeof(acBuffer), "%016llX", orxStructure_GetGUID(pstCurrentBunny));
+
+            // Keep track of the previous one (for removal)
+            orxConfig_PushSection(acBuffer);
+            orxConfig_SetU64("Previous", PreviousBunnyGUID);
+            orxConfig_PopSection();
+        }
+
+        // Updates global bunny count
+        s32Delta = orxMIN(s32Delta, s32MaxBunnyCount - s32ActiveBunnyCount);
+        s32ActiveBunnyCount += s32Delta;
+        orxConfig_SetS32("Count", s32ActiveBunnyCount);
+
+        // Inits all bunnies
+        for(orxS32 i = s32ActiveBunnyCount - s32Delta; i < s32ActiveBunnyCount; i++)
+        {
+            orxConfig_GetVector("InitPos", &avBunnyPositions[i]);
+            orxConfig_GetVector("InitSpeed", &avBunnySpeeds[i]);
+        }
+
+        // Updates local bunny count
+        orxString_NPrint(acBuffer, sizeof(acBuffer), "%016llX", orxStructure_GetGUID(pstCurrentBunny));
+        orxConfig_PushSection(acBuffer);
+        orxConfig_SetS32("Count", orxConfig_GetS32("Count") + s32Delta);
+        orxConfig_PopSection();
+    }
+
+    // Remove bunnies?
+    if(orxInput_HasBeenActivated("-Bunny"))
+    {
+        // Has bunny batch?
+        if(pstCurrentBunny)
+        {
+            orxCHAR acBuffer[32];
+            orxS32  s32Delta;
+
+            // Gets batch count, delete current batch & retrieve former bunny batch
+            orxString_NPrint(acBuffer, sizeof(acBuffer), "%016llX", orxStructure_GetGUID(pstCurrentBunny));
+            orxConfig_PushSection(acBuffer);
+            s32Delta = orxConfig_GetS32("Count");
+            orxObject_Delete(pstCurrentBunny);
+            pstCurrentBunny = orxOBJECT(orxStructure_Get(orxConfig_GetU64("Previous")));
+            orxConfig_PopSection();
+
+            // Updates global bunny count
+            s32ActiveBunnyCount -= s32Delta;
+            orxConfig_SetS32("Count", s32ActiveBunnyCount);
+        }
+    }
+
+    // Screenshot?
+    if(orxInput_IsActive("Screenshot") && orxInput_HasNewStatus("Screenshot"))
+    {
+        // Captures it
+        orxScreenshot_Capture();
+    }
+
+    // Should quit?
+    if(orxInput_IsActive("Quit"))
+    {
+        // Send close event
+        orxEvent_SendShort(orxEVENT_TYPE_SYSTEM, orxSYSTEM_EVENT_CLOSE);
+    }
+}
+
+/** Init function, it is called when all orx's modules have been initialized
+ */
 orxSTATUS orxFASTCALL Init()
 {
   orxSTATUS eResult = orxSTATUS_SUCCESS;
 
-  // Creates viewport
-  orxViewport_CreateFromConfig("Viewport");
+    // Create the viewport
+    orxViewport_CreateFromConfig("MainViewport");
 
-  // Creates scene
-  orxObject_CreateFromConfig("Scene");
+    // Create the scene
+    orxObject_CreateFromConfig("Scene");
 
-  // Pushes bunny config section
-  orxConfig_PushSection("Bunny");
+    // Pushes bunny config section
+    orxConfig_PushSection("Bunny");
 
-  // Adds render event handler
-  orxEvent_AddHandler(orxEVENT_TYPE_RENDER, EventHandler);
+    // Adds render event handler
+    orxEvent_AddHandlerWithContext(orxEVENT_TYPE_RENDER, EventHandler, (void *)orxClock_GetInfo(orxClock_Get(orxCLOCK_KZ_CORE)));
+    orxEvent_SetHandlerIDFlags(EventHandler, orxEVENT_TYPE_RENDER, orxNULL, orxEVENT_GET_FLAG(orxRENDER_EVENT_START) | orxEVENT_GET_FLAG(orxRENDER_EVENT_OBJECT_START), orxEVENT_KU32_MASK_ID_ALL);
 
-  // Gets gravity
-  fGravity = orxConfig_GetFloat("Gravity");
+    // Gets gravity
+    fGravity = orxConfig_GetFloat("Gravity");
 
-  // Inits all bunnies
-  for(orxS32 i = 0; i < s32MaxBunnyCount; i++)
-  {
-    orxConfig_GetVector("InitPos", &avBunnyPosList[i]);
-    orxConfig_GetVector("InitSpeed", &avBunnySpeedList[i]);
-  }
+    // Gets screen size
+    orxConfig_PushSection("Display");
+    vScreenSize.fX = orxConfig_GetFloat("ScreenWidth");
+    vScreenSize.fY = orxConfig_GetFloat("ScreenHeight");
+    orxConfig_PopSection();
 
-  // Done!
-  return eResult;
+    // Inits all bunnies
+    for(orxS32 i = 0; i < s32MaxBunnyCount; i++)
+    {
+        orxConfig_GetVector("InitPos", &avBunnyPositions[i]);
+        orxConfig_GetVector("InitSpeed", &avBunnySpeeds[i]);
+    }
+
+    // Register the Update function to the core clock
+    orxClock_Register(orxClock_Get(orxCLOCK_KZ_CORE), Update, orxNULL, orxMODULE_ID_MAIN, orxCLOCK_PRIORITY_NORMAL);
+
+    // Done!
+    return orxSTATUS_SUCCESS;
 }
 
+/** Run function, it should not contain any game logic
+ */
 orxSTATUS orxFASTCALL Run()
 {
-  orxS32    s32Delta = 0, s32Count;
-  orxSTATUS eResult = orxSTATUS_SUCCESS;
-
-  // Add bunnies?
-  if(orxInput_IsActive("AddBunny") && orxInput_HasNewStatus("AddBunny"))
-  {
-    s32Delta = orxConfig_GetS32("Delta");
-  }
-
-  // Remove bunnies?
-  if(orxInput_IsActive("RemoveBunny") && orxInput_HasNewStatus("RemoveBunny"))
-  {
-    s32Delta = -orxConfig_GetS32("Delta");
-  }
-
-  // Updates bunny count
-  s32Count = orxConfig_GetS32("Count") + s32Delta;
-  s32Count = orxCLAMP(s32Count, 0, s32MaxBunnyCount);
-  orxConfig_SetS32("Count", s32Count);
-  s32ActiveBunnyCount = s32Count;
-
-  // Screenshot?
-  if(orxInput_IsActive("Screenshot") && orxInput_HasNewStatus("Screenshot"))
-  {
-    // Captures it
-    orxScreenshot_Capture();
-  }
-  // Quitting?
-  if(orxInput_IsActive("Quit"))
-  {
-    // Updates result
-    eResult = orxSTATUS_FAILURE;
-  }
-
-  // Done!
-  return eResult;
+    // Return orxSTATUS_FAILURE to instruct orx to quit
+    return orxSTATUS_SUCCESS;
 }
 
+/** Exit function, it is called before exiting from orx
+ */
 void orxFASTCALL Exit()
 {
-  // We could delete everything we created here but orx will do it for us anyway =)
+    // Let Orx clean all our mess automatically. :)
 }
 
+/** Bootstrap function, it is called before config is initialized, allowing for early resource storage definitions
+ */
+orxSTATUS orxFASTCALL Bootstrap()
+{
+    // Add config storage to find the initial config file
+    orxResource_AddStorage(orxCONFIG_KZ_RESOURCE_GROUP, "../data/config", orxFALSE);
+
+    // Return orxSTATUS_FAILURE to prevent orx from loading the default config file
+    return orxSTATUS_SUCCESS;
+}
+
+/** Main function
+ */
 int main(int argc, char **argv)
 {
-  // Sets config bootstrap
-  orxConfig_SetBootstrap(Bootstrap);
+    // Set the bootstrap function to provide at least one resource storage before loading any config files
+    orxConfig_SetBootstrap(Bootstrap);
 
-  // Executes orx
-  orx_Execute(argc, argv, Init, Run, Exit);
+    // Execute our game
+    orx_Execute(argc, argv, Init, Run, Exit);
 
-  // Done!
-  return EXIT_SUCCESS;
+    // Done!
+    return EXIT_SUCCESS;
 }
-
-
-#ifdef __orxMSVC__
-
-#include "windows.h"
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-  // Sets config bootstrap
-  orxConfig_SetBootstrap(Bootstrap);
-
-  // Executes orx
-  orx_WinExecute(Init, Run, Exit);
-
-  // Done!
-  return EXIT_SUCCESS;
-}
-
-#endif // __orxMSVC__
